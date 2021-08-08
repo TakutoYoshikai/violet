@@ -2,7 +2,6 @@ use std::fs;
 use std::env;
 use std::io::Read;
 use std::fs::File;
-use std::io::Write;
 use aes::Aes256;
 use block_modes::{BlockMode, Cbc};
 use block_modes::block_padding::Pkcs7;
@@ -16,8 +15,9 @@ const BASE_STR: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123
 
 const MESSAGES: &'static [&'static str] = &[];
 const START_TIME: &str = "";
+const KEY: &str = "";
 
-fn violet<'a>(messages: &'a Vec<String>, start_date: DateTime<Local>) -> Option<&'a String> {
+fn violet<'a>(messages: Vec<String>, start_date: DateTime<Local>) -> Option<String> {
     let client = SntpClient::new();
     let result = client.synchronize("time.google.com").unwrap();
     let now: DateTime<Local> = DateTime::from(result.datetime());
@@ -27,7 +27,8 @@ fn violet<'a>(messages: &'a Vec<String>, start_date: DateTime<Local>) -> Option<
         next_year += 1;
         let dt1 = start_date.with_year(next_year).unwrap();
         if now.timestamp() > start_date.timestamp() && now.timestamp() < dt1.timestamp() {
-            return Some(&messages[i]);
+            let decrypted = std::str::from_utf8(&decrypt(KEY, &messages[i])).unwrap().to_string();
+            return Some(decrypted);
         }
     }
     return None;
@@ -71,8 +72,16 @@ fn decrypt(key: &str, data: &str) -> Vec<u8> {
 }
 
 fn main() {
-    let dt: NaiveDateTime = NaiveDateTime::parse_from_str(START_TIME, "%Y-%m-%d-%H-%M-%S-%z").unwrap();
-    let local: DateTime<Local> = Local.from_local_datetime(&dt).unwrap();
-    let messages: Vec<String> = MESSAGES.iter().map(|s| s.to_string()).collect();
-    print!("{}", violet(&messages, local).unwrap());
+    let args: Vec<String> = env::args().collect();
+    if args.len() <= 1 {
+        let dt: NaiveDateTime = NaiveDateTime::parse_from_str(START_TIME, "%Y-%m-%d-%H-%M-%S-%z").unwrap();
+        let local: DateTime<Local> = Local.from_local_datetime(&dt).unwrap();
+        let messages: Vec<String> = MESSAGES.iter().map(|s| s.to_string()).collect();
+        print!("{}", violet(messages, local).unwrap());
+        return;
+    }
+    let target: &str = &args[1];
+    let key: &str = &args[2];
+    let data = read_file(target);
+    print!("{}", encrypt(key, &data.unwrap()));
 }
