@@ -1,2 +1,0 @@
-];
-const START_TIME: &str = "
