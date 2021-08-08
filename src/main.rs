@@ -17,7 +17,7 @@ const MESSAGES: &'static [&'static str] = &[];
 const START_TIME: &str = "";
 const KEY: &str = "";
 
-fn violet<'a>(messages: Vec<String>, start_date: DateTime<Local>) -> Option<String> {
+fn violet(messages: Vec<String>, start_date: DateTime<Local>) -> Option<String> {
     let client = SntpClient::new();
     let result = client.synchronize("time.google.com").unwrap();
     let now: DateTime<Local> = DateTime::from(result.datetime());
