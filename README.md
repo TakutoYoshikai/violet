@@ -16,6 +16,7 @@ const KEY: &str = ""; # the KEY 32 ascii characters.
 **compile**
 ```bash
 cargo build --release
+cp ./target/release/violet /path/to/other/dir
 ```
 
 **show messages**
